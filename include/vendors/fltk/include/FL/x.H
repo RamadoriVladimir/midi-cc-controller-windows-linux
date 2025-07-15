@@ -1,9 +1,7 @@
 //
-// "$Id: x.H 9299 2012-03-23 16:47:53Z manolo $"
-//
 // X11 header file for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2012 by Bill Spitzak and others.
+// Copyright 1998-2024 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -20,17 +18,6 @@
 // calling Xlib.  You should include this file if (and ONLY if) you
 // need to call Xlib directly.  These symbols may not exist on non-X
 // systems.
-
-/** \class Fl_Mac_App_Menu 
- Mac OS-specific class allowing to localize the application menu.
- 
- These character strings are used to build the application menu. They can be localized
- at run time to any UTF-8 text by placing instructions such as this \e very 
- early in the program:
- \verbatim
- Fl_Mac_App_Menu::print = "Imprimer la fenêtre";
- \endverbatim
-*/
 
 #if !defined(Fl_X_H) && !defined(FL_DOXYGEN) 
 #  define Fl_X_H
@@ -52,7 +39,6 @@
 #    endif
 #    include <X11/Xatom.h>
 #    include "Fl_Window.H"
-#    include "Xutf8.h"
 // Mirror X definition of Region to Fl_Region, for portability...
 typedef Region Fl_Region;
 
@@ -84,20 +70,20 @@ extern FL_EXPORT ulong fl_event_time;
 
 // off-screen pixmaps: create, destroy, draw into, copy to window:
 typedef ulong Fl_Offscreen;
-#   define fl_create_offscreen(w,h) \
-  XCreatePixmap(fl_display, \
-	      (Fl_Surface_Device::surface() == Fl_Display_Device::display_device() ? \
-	      fl_window : fl_xid(Fl::first_window()) ) , \
-	      w, h, fl_visual->depth)
+#    define fl_create_offscreen(w,h) XCreatePixmap(fl_display, RootWindow(fl_display, fl_screen), w, h, fl_visual->depth)
+#    define fl_create_offscreen_with_alpha(w,h) XCreatePixmap(fl_display, RootWindow(fl_display, fl_screen), w, h, 32)
 // begin/end are macros that save the old state in local variables:
 #    define fl_begin_offscreen(pixmap) \
   Window _sw=fl_window; fl_window=pixmap; \
+  GC _sgc = fl_gc; if (!_sgc) fl_gc = XCreateGC(fl_display, pixmap, 0, 0); \
   Fl_Surface_Device *_ss = Fl_Surface_Device::surface(); Fl_Display_Device::display_device()->set_current(); \
   fl_push_no_clip()
 #    define fl_end_offscreen() \
-  fl_pop_clip(); fl_window = _sw; _ss->set_current()
+  fl_pop_clip(); fl_window = _sw; _ss->set_current(); \
+  if (!_sgc) XFreeGC(fl_display, fl_gc); \
+    fl_gc = _sgc
 
-extern void fl_copy_offscreen(int x, int y, int w, int h, Fl_Offscreen pixmap, int srcx, int srcy);
+extern FL_EXPORT void fl_copy_offscreen(int x, int y, int w, int h, Fl_Offscreen pixmap, int srcx, int srcy);
 #    define fl_delete_offscreen(pixmap) XFreePixmap(fl_display, pixmap)
 
 // Bitmap masks
@@ -119,7 +105,7 @@ FL_EXPORT Fl_Region XRectangleRegion(int x, int y, int w, int h); // in fl_rect.
 // With Xlib / X11 fonts, fl_xfont will return the current selected font.
 // With XFT / X11 fonts, fl_xfont will attempt to return the bitmap "core" font most
 // similar to (usually the same as) the current XFT font.
-class Fl_XFont_On_Demand
+class FL_EXPORT Fl_XFont_On_Demand
 {
 public:
   Fl_XFont_On_Demand(XFontStruct* p = NULL) : ptr(p) { }
@@ -137,6 +123,7 @@ private:
   XFontStruct *ptr;
 };
 extern FL_EXPORT Fl_XFont_On_Demand fl_xfont;
+extern FL_EXPORT XFontStruct* fl_X_core_font();
 
 // this object contains all X-specific stuff about a window:
 // Warning: this object is highly subject to change!  
@@ -154,6 +141,10 @@ public:
   static Fl_X* i(const Fl_Window* wi) {return wi->i;}
   void setwindow(Fl_Window* wi) {w=wi; wi->i=this;}
   void sendxjunk();
+  static void set_default_icons(const Fl_RGB_Image*[], int);
+  void set_icons();
+  int set_cursor(Fl_Cursor);
+  int set_cursor(const Fl_RGB_Image*, int, int);
   static void make_xid(Fl_Window*,XVisualInfo* =fl_visual, Colormap=fl_colormap);
   static Fl_X* set_xid(Fl_Window*, Window);
   // kludges to get around protection:
@@ -161,6 +152,8 @@ public:
   static void x(Fl_Window* wi, int X) {wi->x(X);}
   static void y(Fl_Window* wi, int Y) {wi->y(Y);}
   static int ewmh_supported();
+  static int xrender_supported();
+  static void activate_window(Window w);
 };
 
 extern FL_EXPORT char fl_override_redirect; // hack into Fl_X::make_xid()
@@ -170,7 +163,7 @@ inline Window fl_xid(const Fl_Window* w) { Fl_X *xTemp = Fl_X::i(w); return xTem
 
 #else
 
-extern Window fl_xid_(const Fl_Window* w);
+extern FL_EXPORT Window fl_xid_(const Fl_Window* w);
 #define fl_xid(w) fl_xid_(w)
 
 #endif // FL_LIBRARY || FL_INTERNALS
@@ -185,7 +178,3 @@ extern FL_EXPORT int fl_parse_color(const char* p, uchar& r, uchar& g, uchar& b)
 
 #  endif
 #endif
-
-//
-// End of "$Id: x.H 9299 2012-03-23 16:47:53Z manolo $".
-//

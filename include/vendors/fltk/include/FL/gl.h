@@ -1,5 +1,5 @@
 //
-// "$Id: gl.h 8864 2011-07-19 04:49:30Z greg.ercolano $"
+// "$Id$"
 //
 // OpenGL header file for the Fast Light Tool Kit (FLTK).
 //
@@ -58,7 +58,7 @@
 #    include <OpenGL/gl.h>
 #  else
 #    include <GL/gl.h>
-#  endif
+#  endif  // __APPLE__
 
 FL_EXPORT void gl_start();
 FL_EXPORT void gl_finish();
@@ -99,5 +99,5 @@ FL_EXPORT void gl_draw_image(const uchar *, int x,int y,int w,int h, int d=3, in
 #endif // !FL_gl_H
 
 //
-// End of "$Id: gl.h 8864 2011-07-19 04:49:30Z greg.ercolano $".
+// End of "$Id$".
 //
