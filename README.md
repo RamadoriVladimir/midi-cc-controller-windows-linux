@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # MIDI CC Controller
 
 <img src="mcc-logo.png" alt="Logo MIDI CC Controller" width="150" />
@@ -60,3 +61,7 @@ El proyecto sigue una arquitectura orientada a objetos (OOP) con una clara separ
 
 
   
+=======
+# midi-cc-controller-windows-linux
+Proyecto de midi-cc-controller compilado para windows, con las dll necesarias para compilacion y uso de la aplicacion
+>>>>>>> 54921d6109c560a1befde43fcb55d88806760095
